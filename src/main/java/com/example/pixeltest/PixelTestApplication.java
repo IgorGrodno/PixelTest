@@ -1,8 +1,5 @@
 package com.example.pixeltest;
 
-import com.example.pixeltest.DAL.Repositories.AccountRepository;
-import com.example.pixeltest.DAL.Repositories.EmailDataRepository;
-import com.example.pixeltest.DAL.Repositories.PhoneDataRepository;
 import com.example.pixeltest.DAL.Repositories.UserRepository;
 import com.example.pixeltest.DAL.models.Account;
 import com.example.pixeltest.DAL.models.EmailData;
@@ -24,8 +21,7 @@ public class PixelTestApplication {
     }
 
     @Bean
-    CommandLineRunner init(UserRepository userRepository, EmailDataRepository emailDataRepository,
-                           PhoneDataRepository phoneDataRepository, AccountRepository accountRepository) {
+    CommandLineRunner init(UserRepository userRepository) {
         return args -> {
             userRepository.deleteAll();
 
