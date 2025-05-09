@@ -1,10 +1,10 @@
 package com.example.pixeltest;
 
 import com.example.pixeltest.DAL.Repositories.UserRepository;
-import com.example.pixeltest.DAL.models.Account;
-import com.example.pixeltest.DAL.models.EmailData;
-import com.example.pixeltest.DAL.models.PhoneData;
-import com.example.pixeltest.DAL.models.User;
+import com.example.pixeltest.Models.Ntities.Account;
+import com.example.pixeltest.Models.Ntities.EmailData;
+import com.example.pixeltest.Models.Ntities.PhoneData;
+import com.example.pixeltest.Models.Ntities.User;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -24,8 +24,6 @@ public class PixelTestApplication {
     CommandLineRunner init(UserRepository userRepository) {
         return args -> {
             userRepository.deleteAll();
-
-
             for (int i = 0; i < 4; i++) {
                 User user = new User("user" + (i + 1),
                         LocalDate.of(2000 + i, i + 1, i + 1), "password" + (i + 1));

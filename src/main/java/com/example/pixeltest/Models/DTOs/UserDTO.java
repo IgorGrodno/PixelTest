@@ -1,4 +1,4 @@
-package com.example.pixeltest.Services.DTOs;
+package com.example.pixeltest.Models.DTOs;
 
 import lombok.Getter;
 import lombok.Setter;

@@ -1,4 +1,4 @@
-package com.example.pixeltest.DAL.models;
+package com.example.pixeltest.Models.Ntities;
 
 import jakarta.persistence.*;
 import lombok.Getter;

@@ -1,6 +1,6 @@
 package com.example.pixeltest.API;
 
-import com.example.pixeltest.Services.DTOs.UserDTO;
+import com.example.pixeltest.Models.DTOs.UserDTO;
 import com.example.pixeltest.Services.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,12 +21,12 @@ public class UserController {
 
     @GetMapping
     public ResponseEntity<List<UserDTO>>  getAllUsers() {
-        return ResponseEntity.ok(userService.getAllUsers());
+        return ResponseEntity.ok(userService.getAllUsersDTO());
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<UserDTO> getUserById(@PathVariable Long id) {
-        return ResponseEntity.ok(userService.getUserById(id));
+        return ResponseEntity.ok(userService.getUserDTOById(id));
     }
 
 }

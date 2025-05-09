@@ -1,9 +1,9 @@
 package com.example.pixeltest.DAL.Utils;
 
-import com.example.pixeltest.Services.DTOs.UserDTO;
-import com.example.pixeltest.DAL.models.User;
-import com.example.pixeltest.DAL.models.EmailData;
-import com.example.pixeltest.DAL.models.PhoneData;
+import com.example.pixeltest.Models.DTOs.UserDTO;
+import com.example.pixeltest.Models.Ntities.User;
+import com.example.pixeltest.Models.Ntities.EmailData;
+import com.example.pixeltest.Models.Ntities.PhoneData;
 
 import java.util.stream.Collectors;
 
