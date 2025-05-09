@@ -1,4 +1,4 @@
-package com.example.pixeltest.DAL.Utils;
+package com.example.pixeltest.Utils;
 
 import com.example.pixeltest.Models.DTOs.UserDTO;
 import com.example.pixeltest.Models.Ntities.User;

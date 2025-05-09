@@ -2,12 +2,11 @@ package com.example.pixeltest.API;
 
 import com.example.pixeltest.Models.DTOs.UserDTO;
 import com.example.pixeltest.Services.UserService;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import java.util.Date;
 import java.util.List;
 
 @RestController
@@ -27,6 +26,16 @@ public class UserController {
     @GetMapping("/{id}")
     public ResponseEntity<UserDTO> getUserById(@PathVariable Long id) {
         return ResponseEntity.ok(userService.getUserDTOById(id));
+    }
+
+    @GetMapping("/search")
+    public Page<UserDTO> searchUsers(@RequestParam(required = false) String name,
+                                     @RequestParam(required = false) String phone,
+                                     @RequestParam(required = false) String email,
+                                     @RequestParam(required = false) Date dateOfBirth,
+                                     @RequestParam(defaultValue = "0") int page,
+                                     @RequestParam(defaultValue = "10") int size) {
+        return userService.searchUsers(name, phone, email, dateOfBirth, page, size);
     }
 
 }
