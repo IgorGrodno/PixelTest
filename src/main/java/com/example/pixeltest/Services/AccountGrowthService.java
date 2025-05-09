@@ -2,6 +2,8 @@ package com.example.pixeltest.Services;
 
 import com.example.pixeltest.DAL.Repositories.AccountRepository;
 import com.example.pixeltest.Models.Ntities.Account;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,6 +16,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 public class AccountGrowthService {
 
+    private static final Logger logger = LoggerFactory.getLogger(AccountGrowthService.class);
+
     private final AccountRepository accountRepository;
     private final Map<Long, BigDecimal> initialBalances = new ConcurrentHashMap<>();
 
@@ -24,8 +28,9 @@ public class AccountGrowthService {
     @Scheduled(fixedRate = 30_000)
     @Transactional
     public void increaseBalances() {
-        List<Account> accounts = accountRepository.findAll();
+        logger.info("Starting balance increase process");
 
+        List<Account> accounts = accountRepository.findAll();
         for (Account account : accounts) {
             Long accountId = account.getId();
             BigDecimal current = account.getBalance();
@@ -39,12 +44,16 @@ public class AccountGrowthService {
                 BigDecimal increased = current.multiply(BigDecimal.valueOf(1.1));
                 BigDecimal capped = increased.min(max);
                 account.setBalance(capped);
+
+                logger.info("Account ID {} balance increased from {} to {}", accountId, current, capped);
             }
         }
+
+        logger.info("Balance increase process completed");
     }
 
     public void registerNewAccount(Account account) {
         initialBalances.put(account.getId(), account.getBalance());
+        logger.info("Registered new account with ID {} and initial balance {}", account.getId(), account.getBalance());
     }
 }
-

@@ -4,6 +4,8 @@ import com.example.pixeltest.JWT.JwtUtils;
 import com.example.pixeltest.JWT.LoginRequest;
 import com.example.pixeltest.Models.Ntities.User;
 import com.example.pixeltest.Services.UserService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -20,6 +22,8 @@ import java.util.Map;
 @RequestMapping("/api/auth")
 public class AuthController {
 
+    private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
+
     private final AuthenticationManager authenticationManager;
     private final JwtUtils jwtUtils;
     private final UserService userService;
@@ -32,12 +36,13 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
+        logger.info("Attempting login for user: {}", loginRequest.getName());
+
         try {
             Authentication authentication = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(loginRequest.getName(), loginRequest.getPassword()));
 
             User user = userService.getUserByName(loginRequest.getName());
-
             String token = jwtUtils.generateToken(user.getId());
 
             Map<String, Object> response = new HashMap<>();
@@ -45,9 +50,11 @@ public class AuthController {
             response.put("userId", user.getId());
             response.put("username", user.getName());
 
+            logger.info("User {} successfully logged in", loginRequest.getName());
             return ResponseEntity.ok(response);
 
         } catch (AuthenticationException ex) {
+            logger.error("Authentication failed for user: {}", loginRequest.getName());
             return ResponseEntity.status(401).body(Collections.singletonMap("error", "Invalid credentials"));
         }
     }
@@ -55,17 +62,17 @@ public class AuthController {
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentUser(Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated() || authentication.getPrincipal().equals("anonymousUser")) {
+            logger.warn("Unauthorized access attempt");
             return ResponseEntity.status(401).body(Map.of(
                     "error", "Unauthorized: user not authenticated"
             ));
         }
 
         Long userId = (Long) authentication.getPrincipal();
+        logger.info("User with ID: {} accessed their profile", userId);
 
         return ResponseEntity.ok(Map.of(
                 "id", userId
         ));
     }
-
 }
-
