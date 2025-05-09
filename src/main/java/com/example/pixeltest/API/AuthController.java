@@ -1,8 +1,8 @@
 package com.example.pixeltest.API;
 
-import com.example.pixeltest.Models.Ntities.User;
 import com.example.pixeltest.JWT.JwtUtils;
 import com.example.pixeltest.JWT.LoginRequest;
+import com.example.pixeltest.Models.Ntities.User;
 import com.example.pixeltest.Services.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -10,7 +10,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
@@ -61,10 +60,10 @@ public class AuthController {
             ));
         }
 
-        User user = (User) authentication.getPrincipal();
+        Long userId = (Long) authentication.getPrincipal();
 
         return ResponseEntity.ok(Map.of(
-                "id", user.getId()
+                "id", userId
         ));
     }
 
