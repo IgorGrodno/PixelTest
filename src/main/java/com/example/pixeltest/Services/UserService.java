@@ -32,11 +32,14 @@ public class UserService {
     private final EmailDataRepository emailDataRepository;
     private final PhoneDataRepository phoneDataRepository;
 
+    private final AccountGrowthService accountGrowthService;
+
     public UserService(UserRepository userRepository, EmailDataRepository emailDataRepository,
-                       PhoneDataRepository phoneDataRepository) {
+                       PhoneDataRepository phoneDataRepository, AccountGrowthService accountGrowthService) {
         this.userRepository = userRepository;
         this.emailDataRepository = emailDataRepository;
         this.phoneDataRepository = phoneDataRepository;
+        this.accountGrowthService = accountGrowthService;
     }
 
     @Transactional
@@ -100,6 +103,7 @@ public class UserService {
             user.addPhone(phoneData);
         }
         userRepository.save(user);
+        accountGrowthService.registerNewAccount(user.getAccount());
         return UserMapper.toDto(user);
     }
 
@@ -217,6 +221,7 @@ public class UserService {
         senderAccount.setBalance(senderAccount.getBalance().subtract(amount));
         receiverAccount.setBalance(receiverAccount.getBalance().add(amount));
     }
+
     @Transactional
     public Page<UserDTO> searchUsers(String name, String phone, String email, java.util.Date dateOfBirth, int page, int size) {
 
