@@ -1,5 +1,6 @@
 package com.example.pixeltest.Services;
 
+import com.example.pixeltest.DAL.Repositories.AccountRepository;
 import com.example.pixeltest.DAL.Repositories.EmailDataRepository;
 import com.example.pixeltest.DAL.Repositories.PhoneDataRepository;
 import com.example.pixeltest.DAL.Repositories.UserRepository;
@@ -31,15 +32,16 @@ public class UserService {
     private final UserRepository userRepository;
     private final EmailDataRepository emailDataRepository;
     private final PhoneDataRepository phoneDataRepository;
-
     private final AccountGrowthService accountGrowthService;
+    private final AccountRepository accountRepository;
 
     public UserService(UserRepository userRepository, EmailDataRepository emailDataRepository,
-                       PhoneDataRepository phoneDataRepository, AccountGrowthService accountGrowthService) {
+                       PhoneDataRepository phoneDataRepository, AccountGrowthService accountGrowthService, AccountRepository accountRepository) {
         this.userRepository = userRepository;
         this.emailDataRepository = emailDataRepository;
         this.phoneDataRepository = phoneDataRepository;
         this.accountGrowthService = accountGrowthService;
+        this.accountRepository = accountRepository;
     }
 
     @Transactional
@@ -73,22 +75,22 @@ public class UserService {
     @Transactional
     public UserDTO createUser(UserDTO userDTO) {
         User user = new User();
-        if (userDTO.getName().isEmpty()){
+        if (userDTO.getName().isEmpty()) {
             throw new IllegalArgumentException("User name cannot be empty");
         }
-        if (userDTO.getPhones().isEmpty()){
+        if (userDTO.getPhones().isEmpty()) {
             throw new IllegalArgumentException("User must have at least one phone number");
         }
-        if (userDTO.getEmails().isEmpty()){
+        if (userDTO.getEmails().isEmpty()) {
             throw new IllegalArgumentException("User must have at least one email");
         }
-        if(userDTO.getBirthDate().isBefore(java.time.LocalDate.now().minusYears(100))){
+        if (userDTO.getBirthDate().isBefore(java.time.LocalDate.now().minusYears(100))) {
             throw new IllegalArgumentException("User birth date cannot be empty");
         }
 
         user.setName(userDTO.getName());
         user.setBirthDate(userDTO.getBirthDate());
-        if(userDTO.getBalance() == null){
+        if (userDTO.getBalance() == null) {
             userDTO.setBalance(BigDecimal.ZERO);
         }
         Account account = new Account(userDTO.getBalance());
@@ -125,10 +127,10 @@ public class UserService {
             }
         }
 
-        if (userDTO.getPhones().isEmpty()){
+        if (userDTO.getPhones().isEmpty()) {
             throw new IllegalArgumentException("User must have at least one phone number");
         }
-        if (userDTO.getEmails().isEmpty()){
+        if (userDTO.getEmails().isEmpty()) {
             throw new IllegalArgumentException("User must have at least one email");
         }
 
@@ -201,13 +203,8 @@ public class UserService {
             throw new IllegalArgumentException("Sender and receiver must be different");
         }
 
-        User sender = userRepository.findById(senderId)
-                .orElseThrow(() -> new EntityNotFoundException("Sender not found with id " + senderId));
-        User receiver = userRepository.findById(receiverId)
-                .orElseThrow(() -> new EntityNotFoundException("Receiver not found with id " + receiverId));
-
-        Account senderAccount = sender.getAccount();
-        Account receiverAccount = receiver.getAccount();
+        Account senderAccount = accountRepository.findAccountForUpdateByUserId(senderId);
+        Account receiverAccount = accountRepository.findAccountForUpdateByUserId(receiverId);
 
         if (senderAccount == null || receiverAccount == null) {
             throw new EntityNotFoundException("Account not found for user with id " +
@@ -222,8 +219,10 @@ public class UserService {
         receiverAccount.setBalance(receiverAccount.getBalance().add(amount));
     }
 
+
     @Transactional
-    public Page<UserDTO> searchUsers(String name, String phone, String email, java.util.Date dateOfBirth, int page, int size) {
+    public Page<UserDTO> searchUsers(String name, String phone, String email, java.util.Date dateOfBirth,
+                                     int page, int size) {
 
         Specification<User> spec = Specification.where(UserSpecification.hasDateOfBirthGreaterThan(dateOfBirth))
                 .and(UserSpecification.hasPhone(phone))
