@@ -3,42 +3,39 @@ package com.example.pixeltest.Utils;
 import com.example.pixeltest.Models.Ntities.User;
 import org.springframework.data.jpa.domain.Specification;
 
+import java.util.Date;
+
 public class UserSpecification {
 
-    public static Specification<User> hasDateOfBirthGreaterThan(java.util.Date dateOfBirth) {
-        return (root, query, criteriaBuilder) -> {
-            if (dateOfBirth != null) {
-                return criteriaBuilder.greaterThan(root.get("dateOfBirth"), dateOfBirth);
-            }
-            return null;
-        };
+    public static Specification<User> hasDateOfBirthGreaterThan(Date dateOfBirth) {
+        return (root, query, cb) -> dateOfBirth != null
+                ? cb.greaterThan(root.get("dateOfBirth"), dateOfBirth)
+                : cb.conjunction();
     }
 
     public static Specification<User> hasPhone(String phone) {
-        return (root, query, criteriaBuilder) -> {
+        return (root, query, cb) -> {
             if (phone != null && !phone.isEmpty()) {
-                return criteriaBuilder.equal(root.join("phones").get("phone"), phone);
+                query.distinct(true);
+                return cb.equal(root.join("phones").get("phone"), phone);
             }
-            return null;
+            return cb.conjunction();
         };
     }
 
     public static Specification<User> hasNameLike(String name) {
-        return (root, query, criteriaBuilder) -> {
-            if (name != null && !name.isEmpty()) {
-                return criteriaBuilder.like(root.get("name"), name + "%");
-            }
-            return null;
-        };
+        return (root, query, cb) -> name != null && !name.isEmpty()
+                ? cb.like(root.get("name"), name + "%")
+                : cb.conjunction();
     }
 
     public static Specification<User> hasEmail(String email) {
-        return (root, query, criteriaBuilder) -> {
+        return (root, query, cb) -> {
             if (email != null && !email.isEmpty()) {
-                return criteriaBuilder.equal(root.join("emails").get("email"), email);
+                query.distinct(true);
+                return cb.equal(root.join("emails").get("email"), email);
             }
-            return null;
+            return cb.conjunction();
         };
     }
 }
-
