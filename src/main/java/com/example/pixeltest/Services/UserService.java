@@ -8,6 +8,7 @@ import com.example.pixeltest.Models.Ntities.EmailData;
 import com.example.pixeltest.Models.Ntities.PhoneData;
 import com.example.pixeltest.Models.Ntities.User;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +30,7 @@ public class UserService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
     }
 
+    @Cacheable("allUsers")
     @Transactional(readOnly = true)
     public List<UserDTO> getAllUsersDTO() {
         return userRepository.findAll()
