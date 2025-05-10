@@ -85,6 +85,14 @@ public class UserService {
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
     }
 
+    @Transactional
+    public UserDTO getUserDTOByName(String name) {
+        logger.info("Getting userDTO by name: {}", name);
+        User user = userRepository.findByName(name)
+                .orElseThrow(() -> new EntityNotFoundException("User not found"));
+        return UserMapper.toDto(user);
+    }
+
     @Cacheable("allUsers")
     @Transactional(readOnly = true)
     public List<UserDTO> getAllUsersDTO() {
@@ -208,10 +216,7 @@ public class UserService {
         Account senderAccount = accountRepository.findAccountForUpdateByUserId(senderId);
         Account receiverAccount = accountRepository.findAccountForUpdateByUserId(receiverId);
 
-        if (senderAccount == null || receiverAccount == null) {
-            throw new EntityNotFoundException("Account not found for user with id " +
-                    (senderAccount == null ? senderId : receiverId));
-        }
+        logger.info("Sender account balance: {}, Receiver account balance: {}", senderAccount.getBalance(), receiverAccount.getBalance());
 
         if (senderAccount.getBalance().compareTo(amount) < 0) {
             throw new IllegalArgumentException("Insufficient funds");
@@ -219,6 +224,9 @@ public class UserService {
 
         senderAccount.setBalance(senderAccount.getBalance().subtract(amount));
         receiverAccount.setBalance(receiverAccount.getBalance().add(amount));
+
+        accountRepository.save(senderAccount);
+        accountRepository.save(receiverAccount);
 
         logger.info("Money transferred successfully from user ID: {} to user ID: {}", senderId, receiverId);
     }
