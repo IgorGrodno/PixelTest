@@ -35,33 +35,56 @@ public class UserController {
     @GetMapping("/{id}")
     public ResponseEntity<UserDTO> getUserById(@PathVariable Long id) {
         logger.info("Fetching user by ID: {}", id);
-        UserDTO userDTO = userService.getUserDTOById(id);
-        logger.info("Successfully fetched user with ID: {}", id);
-        return ResponseEntity.ok(userDTO);
+        try {
+            UserDTO userDTO = userService.getUserDTOById(id);
+            logger.info("Successfully fetched user with ID: {}", id);
+            return ResponseEntity.ok(userDTO);
+        } catch (Exception e) {
+            logger.error("Error fetching user with ID {}: {}", id, e.getMessage());
+            return ResponseEntity.notFound().build();
+        }
+
     }
 
     @PostMapping
     public ResponseEntity<UserDTO> createUser(@RequestBody UserDTO userDTO) {
         logger.info("Creating user with name: {}", userDTO.getName());
-        UserDTO createdUser = userService.createUser(userDTO);
-        logger.info("Successfully created user with name: {}", userDTO.getName());
-        return ResponseEntity.ok(createdUser);
+        try {
+            UserDTO createdUser = userService.createUser(userDTO);
+            logger.info("Successfully created user with name: {}", userDTO.getName());
+            return ResponseEntity.ok(createdUser);
+        } catch (Exception e) {
+            logger.error("Error creating user: {}", e.getMessage());
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<UserDTO> updateUser(@PathVariable Long id, @RequestBody UserDTO userDTO) {
         logger.info("Updating user with ID: {}", id);
-        UserDTO updatedUser = userService.updateUser(id, userDTO);
-        logger.info("Successfully updated user with ID: {}", id);
-        return ResponseEntity.ok(updatedUser);
+        try {
+            UserDTO updatedUser = userService.updateUser(id, userDTO);
+            logger.info("Successfully updated user with ID: {}", id);
+            return ResponseEntity.ok(updatedUser);
+        } catch (Exception e) {
+            logger.error("Error updating user with ID {}: {}", id, e.getMessage());
+            return ResponseEntity.notFound().build();
+        }
+
     }
 
     @PatchMapping("/{id}/balance")
     public ResponseEntity<Void> changeUserBalance(@PathVariable Long id, @RequestParam BigDecimal amount) {
         logger.info("Changing balance for user ID: {} by amount: {}", id, amount);
-        userService.changeUserBalance(id, amount);
-        logger.info("Successfully changed balance for user ID: {}", id);
-        return ResponseEntity.ok().build();
+        try {
+            userService.changeUserBalance(id, amount);
+            logger.info("Successfully changed balance for user ID: {}", id);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            logger.error("Error changing balance for user ID {}: {}", id, e.getMessage());
+            return ResponseEntity.notFound().build();
+        }
+
     }
 
     @PostMapping("/transfer")
@@ -69,9 +92,15 @@ public class UserController {
                                           @RequestParam Long receiverId,
                                           @RequestParam BigDecimal amount) {
         logger.info("Initiating transfer from user ID: {} to user ID: {} with amount: {}", senderId, receiverId, amount);
-        userService.sendMoney(senderId, receiverId, amount);
-        logger.info("Successfully completed transfer from user ID: {} to user ID: {}", senderId, receiverId);
-        return ResponseEntity.ok().build();
+        try {
+            userService.sendMoney(senderId, receiverId, amount);
+            logger.info("Successfully completed transfer from user ID: {} to user ID: {}", senderId, receiverId);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            logger.error("Error during transfer from user ID {} to user ID {}: {}", senderId, receiverId, e.getMessage());
+            return ResponseEntity.badRequest().build();
+        }
+
     }
 
     @GetMapping("/search")

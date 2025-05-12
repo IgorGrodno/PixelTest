@@ -11,8 +11,10 @@ import com.example.pixeltest.Models.Ntities.PhoneData;
 import com.example.pixeltest.Models.Ntities.User;
 import com.example.pixeltest.Utils.UserMapper;
 import com.example.pixeltest.Utils.UserSpecification;
+import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -21,7 +23,6 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.persistence.EntityNotFoundException;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.HashSet;
@@ -79,14 +80,14 @@ public class UserService {
     }
 
     @Transactional
-    public User getUserByName(String name) {
+    public User getUserByName(String name) throws EntityNotFoundException {
         logger.info("Getting user by name: {}", name);
         return userRepository.findByName(name)
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
     }
 
     @Transactional
-    public UserDTO getUserDTOByName(String name) {
+    public UserDTO getUserDTOByName(String name) throws EntityNotFoundException {
         logger.info("Getting userDTO by name: {}", name);
         User user = userRepository.findByName(name)
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
@@ -104,15 +105,16 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public UserDTO getUserDTOById(Long id) {
+    public UserDTO getUserDTOById(Long id) throws EntityNotFoundException{
         logger.info("Getting user by ID: {}", id);
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with id " + id));
         return UserMapper.toDto(user);
     }
 
+    @CacheEvict(value = "allUsers", allEntries = true)
     @Transactional
-    public UserDTO createUser(UserDTO userDTO) {
+    public UserDTO createUser(UserDTO userDTO) throws IllegalArgumentException {
         logger.info("Creating new user: {}", userDTO.getName());
         if (userDTO.getName().isEmpty()) {
             throw new IllegalArgumentException("User name cannot be empty");
@@ -124,7 +126,11 @@ public class UserService {
             throw new IllegalArgumentException("User must have at least one email");
         }
         if (userDTO.getBirthDate().isBefore(java.time.LocalDate.now().minusYears(100))) {
-            throw new IllegalArgumentException("User birth date cannot be empty");
+            throw new IllegalArgumentException("User age cannot be empty or more than 100 years");
+        }
+        if (userDTO.getPassword() == null || userDTO.getPassword().length() < 8 ||
+                userDTO.getPassword().length() > 500 || userDTO.getPassword().isBlank()) {
+            throw new IllegalArgumentException("User password incorrect");
         }
 
         User user = new User();
@@ -153,7 +159,7 @@ public class UserService {
     }
 
     @Transactional
-    public UserDTO updateUser(Long id, UserDTO userDTO) {
+    public UserDTO updateUser(Long id, UserDTO userDTO) throws EntityNotFoundException {
         logger.info("Updating user with ID: {}", id);
 
         User user = userRepository.findById(id)
@@ -176,11 +182,12 @@ public class UserService {
         updateEmailsAndPhones(user, userDTO);
 
         logger.info("User with ID: {} updated successfully", id);
+        userRepository.save(user);
         return UserMapper.toDto(user);
     }
 
     @Transactional
-    public void changeUserBalance(Long userId, BigDecimal amount) {
+    public void changeUserBalance(Long userId, BigDecimal amount) throws EntityNotFoundException, IllegalArgumentException {
         logger.info("Changing balance for user ID: {} by amount: {}", userId, amount);
 
         User user = userRepository.findById(userId)
@@ -202,7 +209,7 @@ public class UserService {
     }
 
     @Transactional
-    public void sendMoney(Long senderId, Long receiverId, BigDecimal amount) {
+    public void sendMoney(Long senderId, Long receiverId, BigDecimal amount) throws IllegalArgumentException{
         logger.info("Sending money from user ID: {} to user ID: {} with amount: {}", senderId, receiverId, amount);
 
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
@@ -215,8 +222,6 @@ public class UserService {
 
         Account senderAccount = accountRepository.findAccountForUpdateByUserId(senderId);
         Account receiverAccount = accountRepository.findAccountForUpdateByUserId(receiverId);
-
-        logger.info("Sender account balance: {}, Receiver account balance: {}", senderAccount.getBalance(), receiverAccount.getBalance());
 
         if (senderAccount.getBalance().compareTo(amount) < 0) {
             throw new IllegalArgumentException("Insufficient funds");
@@ -231,8 +236,6 @@ public class UserService {
         logger.info("Money transferred successfully from user ID: {} to user ID: {}", senderId, receiverId);
     }
 
-    @Cacheable(value = "userSearch",
-            key = "T(java.util.Objects).hash(#name, #phone, #email, #dateOfBirth?.time, #page, #size)")
     @Transactional(readOnly = true)
     public Page<UserDTO> searchUsers(String name, String phone, String email, Date dateOfBirth,
                                      int page, int size) {

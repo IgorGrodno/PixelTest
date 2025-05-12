@@ -1,18 +1,13 @@
 package com.example.pixeltest;
 
-import com.example.pixeltest.DAL.Repositories.AccountRepository;
 import com.example.pixeltest.Models.DTOs.UserDTO;
-import com.example.pixeltest.Models.Ntities.Account;
 import com.example.pixeltest.Services.UserService;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -20,11 +15,11 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import java.math.BigDecimal;
 import java.util.Set;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.when;
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertNotNull;
+import static org.junit.Assert.assertThrows;
 
 @SpringBootTest
-@ExtendWith(SpringExtension.class)
 @Testcontainers
 @AutoConfigureMockMvc
 public class UserServiceTest {
@@ -42,13 +37,8 @@ public class UserServiceTest {
         registry.add("spring.datasource.password", postgres::getPassword);
     }
 
-    @Mock
-    private AccountRepository accountRepository;
-
     @Autowired
     private UserService userService;
-
-
 
     @Test
     void testCreateUser_successful() {
@@ -58,6 +48,7 @@ public class UserServiceTest {
         userDTO1.setEmails(Set.of("user1@example.com"));
         userDTO1.setBirthDate(java.time.LocalDate.of(1991, 1, 1));
         userDTO1.setBalance(new BigDecimal("100.00"));
+        userDTO1.setPassword("password10");
 
         UserDTO userDTO2 = new UserDTO();
         userDTO2.setName("user20");
@@ -65,6 +56,7 @@ public class UserServiceTest {
         userDTO2.setEmails(Set.of("user2@example.com"));
         userDTO2.setBirthDate(java.time.LocalDate.of(1992, 2, 2));
         userDTO2.setBalance(new BigDecimal("200.00"));
+        userDTO2.setPassword("password20");
 
         userService.createUser(userDTO1);
         userService.createUser(userDTO2);
@@ -105,18 +97,12 @@ public class UserServiceTest {
 
     @Test
     void sendMoney_insufficientFunds_shouldThrow() {
-        Long senderId = 1L;
-        Long receiverId = 2L;
-        BigDecimal amount = new BigDecimal("1000.00");
-
-        Account sender = new Account(new BigDecimal("50.00"));
-        Account receiver = new Account(new BigDecimal("20.00"));
-
-        when(accountRepository.findAccountForUpdateByUserId(senderId)).thenReturn(sender);
-        when(accountRepository.findAccountForUpdateByUserId(receiverId)).thenReturn(receiver);
+        UserDTO sender = userService.getUserDTOByName("user10");
+        UserDTO receiver = userService.getUserDTOByName("user20");
+        BigDecimal amount = new BigDecimal("5000.00");
 
         Exception exception = assertThrows(IllegalArgumentException.class, () ->
-                userService.sendMoney(senderId, receiverId, amount));
+                userService.sendMoney(sender.getId(), receiver.getId(), amount));
 
         assertEquals("Insufficient funds", exception.getMessage());
     }

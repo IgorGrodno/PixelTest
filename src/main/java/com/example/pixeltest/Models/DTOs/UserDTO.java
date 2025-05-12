@@ -15,6 +15,18 @@ public class UserDTO {
     private BigDecimal balance;
     private Set<String> emails;
     private Set<String> phones;
+    private String password= null;
+
+    public UserDTO(Long id, String name, LocalDate birthDate, BigDecimal balance,
+                   Set<String> emails, Set<String> phones, String password) {
+        this.id = id;
+        this.name = name;
+        this.birthDate = birthDate;
+        this.balance = balance;
+        this.emails = emails;
+        this.phones = phones;
+        this.password = password;
+    }
 
     public UserDTO(Long id, String name, LocalDate birthDate, BigDecimal balance,
                    Set<String> emails, Set<String> phones) {
