@@ -3,9 +3,12 @@ package com.example.pixeltest.JWT;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
 @Component
@@ -17,53 +20,25 @@ public class JwtUtils {
     @Value("${jwtExpirationMs}")
     private long jwtExpirationMs;
 
-    /**
-     * Генерация JWT токена с userId.
-     *
-     * @param userId идентификатор пользователя
-     * @return сгенерированный JWT токен
-     */
     public String generateToken(Long userId) {
         return Jwts.builder()
-                .claim("userId", userId) // Добавляем userId в payload
-                .setIssuedAt(new Date())  // Устанавливаем дату выпуска
-                .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs)) // Срок действия токена
-                .signWith(SignatureAlgorithm.HS512, jwtSecret)  // Подпись с использованием секретного ключа
+                .claim("userId", userId)
+                .setSubject(String.valueOf(userId))
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs))
+                .signWith(Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8)), SignatureAlgorithm.HS512)
                 .compact();
     }
 
-    /**
-     * Извлечение userId из JWT токена.
-     *
-     * @param token JWT токен
-     * @return userId
-     */
     public Long getUserIdFromJwtToken(String token) {
+        SecretKey key = Keys.hmacShaKeyFor(jwtSecret.getBytes(StandardCharsets.UTF_8));
         Claims claims = Jwts.parserBuilder()
-                .setSigningKey(jwtSecret)  // Устанавливаем ключ для проверки подписи
+                .setSigningKey(key)
                 .build()
-                .parseClaimsJws(token)  // Парсим токен
-                .getBody();  // Получаем тело (claims)
+                .parseClaimsJws(token)
+                .getBody();
 
-        return claims.get("userId", Long.class);  // Возвращаем userId из токена
-    }
-
-    /**
-     * Проверка валидности JWT токена.
-     *
-     * @param authToken JWT токен
-     * @return true, если токен валиден, иначе false
-     */
-    public boolean validateJwtToken(String authToken) {
-        try {
-            Jwts.parserBuilder()
-                    .setSigningKey(jwtSecret)
-                    .build()
-                    .parseClaimsJws(authToken);  // Проверяем подпись токена
-            return true;
-        } catch (Exception e) {
-            // В случае ошибок (например, если токен истек или подпись неверна)
-            return false;
-        }
+        return claims.get("userId", Long.class);
     }
 }
+

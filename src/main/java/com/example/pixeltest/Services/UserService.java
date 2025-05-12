@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -105,7 +106,7 @@ public class UserService {
     }
 
     @Transactional(readOnly = true)
-    public UserDTO getUserDTOById(Long id) throws EntityNotFoundException{
+    public UserDTO getUserDTOById(Long id) throws EntityNotFoundException {
         logger.info("Getting user by ID: {}", id);
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("User not found with id " + id));
@@ -125,8 +126,8 @@ public class UserService {
         if (userDTO.getEmails().isEmpty()) {
             throw new IllegalArgumentException("User must have at least one email");
         }
-        if (userDTO.getBirthDate().isBefore(java.time.LocalDate.now().minusYears(100))) {
-            throw new IllegalArgumentException("User age cannot be empty or more than 100 years");
+        if (userDTO.getBirthDate().isAfter(LocalDate.now())) {
+            throw new IllegalArgumentException("Date of birth cannot be in the future");
         }
         if (userDTO.getPassword() == null || userDTO.getPassword().length() < 8 ||
                 userDTO.getPassword().length() > 500 || userDTO.getPassword().isBlank()) {
@@ -209,7 +210,7 @@ public class UserService {
     }
 
     @Transactional
-    public void sendMoney(Long senderId, Long receiverId, BigDecimal amount) throws IllegalArgumentException{
+    public void sendMoney(Long senderId, Long receiverId, BigDecimal amount) throws IllegalArgumentException {
         logger.info("Sending money from user ID: {} to user ID: {} with amount: {}", senderId, receiverId, amount);
 
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
@@ -249,5 +250,10 @@ public class UserService {
         Page<User> usersPage = userRepository.findAll(spec, pageable);
 
         return usersPage.map(UserMapper::toDto);
+    }
+
+    public User getUserById(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with id " + userId));
     }
 }

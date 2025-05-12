@@ -4,6 +4,8 @@ import com.example.pixeltest.JWT.JwtUtils;
 import com.example.pixeltest.JWT.LoginRequest;
 import com.example.pixeltest.Models.Ntities.User;
 import com.example.pixeltest.Services.UserService;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
@@ -30,25 +32,31 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> authenticateUser(@RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<?> authenticateUser(@RequestBody LoginRequest loginRequest, HttpServletResponse response) {
         logger.info("Authenticating user: {}", loginRequest.getName());
         try {
             User user = userService.getUserByName(loginRequest.getName());
             if (user == null) {
                 return ResponseEntity.status(401).body(Collections.singletonMap("error", "User not found"));
             }
-            if(user.getPassword() == null || !user.getPassword().equals(loginRequest.getPassword())) {
+            if (user.getPassword() == null || !user.getPassword().equals(loginRequest.getPassword())) {
                 return ResponseEntity.status(401).body(Collections.singletonMap("error", "Invalid credentials"));
             }
+
             String token = jwtUtils.generateToken(user.getId());
 
-            // Подготовка ответа с токеном
-            Map<String, Object> response = new HashMap<>();
-            response.put("token", token);
-            response.put("userId", user.getId());
-            response.put("username", user.getName());
+            Cookie cookie = new Cookie("jwt", token);
+            cookie.setHttpOnly(false);
+            cookie.setPath("/");
+            cookie.setMaxAge(24 * 60 * 60);
 
-            return ResponseEntity.ok(response);
+            response.addCookie(cookie);
+
+            Map<String, Object> body = new HashMap<>();
+            body.put("userId", user.getId());
+            body.put("username", user.getName());
+
+            return ResponseEntity.ok(body);
 
         } catch (AuthenticationException ex) {
             return ResponseEntity.status(401).body(Collections.singletonMap("error", "Invalid credentials"));

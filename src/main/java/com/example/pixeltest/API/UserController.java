@@ -2,10 +2,12 @@ package com.example.pixeltest.API;
 
 import com.example.pixeltest.Models.DTOs.UserDTO;
 import com.example.pixeltest.Services.UserService;
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -47,8 +49,14 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<UserDTO> createUser(@RequestBody UserDTO userDTO) {
+    public ResponseEntity<UserDTO> createUser(@Valid @RequestBody UserDTO userDTO, BindingResult bindingResult) {
         logger.info("Creating user with name: {}", userDTO.getName());
+
+        if (bindingResult.hasErrors()) {
+            logger.error("Validation errors occurred: {}", bindingResult.getAllErrors());
+            return ResponseEntity.badRequest().build();
+        }
+
         try {
             UserDTO createdUser = userService.createUser(userDTO);
             logger.info("Successfully created user with name: {}", userDTO.getName());
@@ -60,8 +68,15 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<UserDTO> updateUser(@PathVariable Long id, @RequestBody UserDTO userDTO) {
+    public ResponseEntity<UserDTO> updateUser(@PathVariable Long id,@Valid @RequestBody UserDTO userDTO,
+                                              BindingResult bindingResult) {
         logger.info("Updating user with ID: {}", id);
+
+        if (bindingResult.hasErrors()) {
+            logger.error("Validation errors occurred: {}", bindingResult.getAllErrors());
+            return ResponseEntity.badRequest().build();
+        }
+
         try {
             UserDTO updatedUser = userService.updateUser(id, userDTO);
             logger.info("Successfully updated user with ID: {}", id);
