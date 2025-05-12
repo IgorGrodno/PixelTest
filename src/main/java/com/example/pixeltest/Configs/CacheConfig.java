@@ -1,4 +1,4 @@
-package com.example.pixeltest;
+package com.example.pixeltest.Configs;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 import org.springframework.cache.CacheManager;
