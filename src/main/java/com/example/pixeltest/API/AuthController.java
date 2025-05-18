@@ -2,14 +2,17 @@ package com.example.pixeltest.API;
 
 import com.example.pixeltest.JWT.JwtUtils;
 import com.example.pixeltest.JWT.LoginRequest;
+import com.example.pixeltest.Models.DTOs.UserDTO;
 import com.example.pixeltest.Models.Ntities.User;
 import com.example.pixeltest.Services.UserService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -60,6 +63,25 @@ public class AuthController {
 
         } catch (AuthenticationException ex) {
             return ResponseEntity.status(401).body(Collections.singletonMap("error", "Invalid credentials"));
+        }
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<UserDTO> createUser(@Valid @RequestBody UserDTO userDTO, BindingResult bindingResult) {
+        logger.info("Creating user with name: {}", userDTO.getName());
+
+        if (bindingResult.hasErrors()) {
+            logger.error("Validation errors occurred: {}", bindingResult.getAllErrors());
+            return ResponseEntity.badRequest().build();
+        }
+
+        try {
+            UserDTO createdUser = userService.createUser(userDTO);
+            logger.info("Successfully created user with name: {}", userDTO.getName());
+            return ResponseEntity.ok(createdUser);
+        } catch (Exception e) {
+            logger.error("Error creating user: {}", e.getMessage());
+            return ResponseEntity.badRequest().build();
         }
     }
 }

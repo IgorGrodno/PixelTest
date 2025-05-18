@@ -22,6 +22,15 @@
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-elasticsearch</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.data</groupId>
+            <artifactId>spring-data-elasticsearch</artifactId>
+            <version>5.1.7</version> <!-- Убедись, что версия подходит к твоей версии Spring Boot -->
+        </dependency>
         <!-- Spring Boot -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -131,6 +140,11 @@
             <artifactId>junit-jupiter</artifactId>
             <version>1.21.0</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.ivy</groupId>
+            <artifactId>ivy</artifactId>
+            <version>2.5.0</version>
         </dependency>
     </dependencies>
 

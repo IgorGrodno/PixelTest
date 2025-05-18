@@ -48,25 +48,6 @@ public class UserController {
 
     }
 
-    @PostMapping
-    public ResponseEntity<UserDTO> createUser(@Valid @RequestBody UserDTO userDTO, BindingResult bindingResult) {
-        logger.info("Creating user with name: {}", userDTO.getName());
-
-        if (bindingResult.hasErrors()) {
-            logger.error("Validation errors occurred: {}", bindingResult.getAllErrors());
-            return ResponseEntity.badRequest().build();
-        }
-
-        try {
-            UserDTO createdUser = userService.createUser(userDTO);
-            logger.info("Successfully created user with name: {}", userDTO.getName());
-            return ResponseEntity.ok(createdUser);
-        } catch (Exception e) {
-            logger.error("Error creating user: {}", e.getMessage());
-            return ResponseEntity.badRequest().build();
-        }
-    }
-
     @PutMapping("/{id}")
     public ResponseEntity<UserDTO> updateUser(@PathVariable Long id,@Valid @RequestBody UserDTO userDTO,
                                               BindingResult bindingResult) {
